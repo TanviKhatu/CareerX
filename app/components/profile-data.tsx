@@ -1,0 +1,9 @@
+import { createClient } from "@/lib/supabase/server";
+import { Phase3ProfileForm } from "./phase3-profile-form";
+
+export async function ProfileData() {
+  const supabase = await createClient();
+  const user = supabase ? (await supabase.auth.getUser()).data.user : null;
+  const profile = supabase && user ? (await supabase.from("profiles").select("full_name,email,phone,date_of_birth,gender,city,state,country,education_level,school_college,stream,academic_performance,preferred_work_environment,work_style,preferred_industry,higher_education_preference,interests,skills,career_interests,email_verified,phone_verified").eq("user_id", user.id).maybeSingle()).data : null;
+  return <Phase3ProfileForm initial={{ full_name: profile?.full_name || user?.user_metadata?.full_name || "", email: profile?.email || user?.email || "", phone: profile?.phone || user?.user_metadata?.phone || "", date_of_birth: profile?.date_of_birth || "", gender: profile?.gender || "", city: profile?.city || "", state: profile?.state || "", country: profile?.country || "", education_level: profile?.education_level || user?.user_metadata?.education_level || "", school_college: profile?.school_college || "", stream: profile?.stream || user?.user_metadata?.stream || "", academic_performance: profile?.academic_performance || "", preferred_work_environment: profile?.preferred_work_environment || "", work_style: profile?.work_style || "", preferred_industry: profile?.preferred_industry || "", higher_education_preference: profile?.higher_education_preference || "", interests: Array.isArray(profile?.interests) ? profile.interests : [], skills: Array.isArray(profile?.skills) ? profile.skills : [], career_interests: Array.isArray(profile?.career_interests) ? profile.career_interests : [], email_verified: Boolean(profile?.email_verified ?? user?.email_confirmed_at), phone_verified: Boolean(profile?.phone_verified ?? user?.phone_confirmed_at) }} />;
+  }
