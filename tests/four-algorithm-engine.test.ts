@@ -17,9 +17,11 @@ import { buildCareerFeatureVectors, buildStudentFeatureVector, type KnnPredictio
 import { runKmeansAnalysis, type KmeansResult } from "../lib/kmeans";
 
 const answers = Object.fromEntries(assessmentQuestions.map((question) => [question.id, 1]));
-const profile = { stream: "Commerce", interests: ["Business", "Finance"], skills: ["Analysis", "Mathematics"], career_interests: ["chartered-accountant"] };
+const profile = { stream: "Commerce", interests: ["Business", "Finance"], skills: ["Analysis", "Mathematics"], career_interests: ["finance"] };
 const profileScores = matchCareers(answers, profile, careers.length);
-const software = careers.find((career) => career.slug === "software-developer");
+assert.equal(assessmentQuestions.length, 25);
+assert.deepEqual(careers.map((career) => career.name), ["Engineer", "Doctor", "Teacher", "Lawyer", "Designer", "Social Worker", "Finance", "Media", "Content Creator", "Journalist"]);
+const software = careers.find((career) => career.slug === "engineer");
 assert.ok(software);
 const studentVector = buildStudentFeatureVector(answers, profile).vector;
 const softwareVector = buildCareerFeatureVectors().find((candidate) => candidate.career.slug === software.slug);
@@ -58,7 +60,7 @@ test("catalog reference algorithms work with only three student-history records"
   const kinds = ["commerce", "technology", "healthcare"];
   const studentHistory = kinds.map((kind, index) => {
     const recordAnswers = Object.fromEntries(assessmentQuestions.map((question) => [question.id, kind === "commerce" ? 1 : kind === "technology" ? (question.id === "interest-technology" ? 3 : 1) : (question.id === "interest-people" ? 3 : 1)]));
-    const recordProfile = kind === "commerce" ? { stream: "Commerce", career_interests: ["chartered-accountant"] } : kind === "technology" ? { stream: "Computer Science", career_interests: ["software-developer"] } : { stream: "Medical", career_interests: ["doctor"] };
+    const recordProfile = kind === "commerce" ? { stream: "Commerce", career_interests: ["finance"] } : kind === "technology" ? { stream: "Computer Science", career_interests: ["engineer"] } : { stream: "Medical", career_interests: ["doctor"] };
     return { recordId: `actual-history-test-${index}`, dataSource: "student_history" as const, features: buildFeaturesFromAnswerProfile(recordAnswers, recordProfile), label: recordProfile.career_interests[0] };
   });
   const decisionTree = evaluateDecisionTree(answers, profile, studentHistory);
@@ -103,7 +105,7 @@ test("original 12-profile commerce/technology/healthcare Apriori fixture complet
     const profile = kind === "commerce"
       ? { stream: "Commerce", interests: ["Business", "Finance"], skills: ["Mathematics", "Analysis"], career_interests: ["chartered-accountant"] }
       : kind === "technology"
-        ? { stream: "Computer Science", interests: ["Technology", "Programming"], skills: ["Programming", "Problem Solving"], career_interests: ["software-developer"] }
+        ? { stream: "Computer Science", interests: ["Technology", "Programming"], skills: ["Programming", "Problem Solving"], career_interests: ["engineer"] }
         : { stream: "Medical", interests: ["Medicine", "Biology", "Helping others"], skills: ["Communication", "Research"], career_interests: ["doctor"] };
     const features = buildFeaturesFromAnswerProfile(makeAnswers(kind), profile);
     return Object.keys(features).filter((key) => features[key] > 0).sort();

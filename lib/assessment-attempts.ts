@@ -6,7 +6,7 @@ import { DEFAULT_K, runKmeansAnalysis, type KmeansResult } from "./kmeans";
 import { APRIORI_DEFAULT_MIN_CONFIDENCE, APRIORI_DEFAULT_MIN_SUPPORT, runAprioriAnalysis, type AprioriResult } from "./apriori";
 import { careers, getCareer } from "./careers";
 
-export const ASSESSMENT_TYPE = "career-guidance-v1";
+export const ASSESSMENT_TYPE = "career-guidance-v2";
 export const ASSESSMENT_KNN_K = 1;
 export const ATTEMPT_PROFILE_COLUMNS =
   "interests,skills,stream,work_style,preferred_work_environment,career_interests,preferred_industry,career_preferences,higher_education_preference,education_level";
@@ -100,6 +100,7 @@ export type AssessmentAttempt = {
 export type CreateAttemptInput = {
   userId: string;
   answers: unknown;
+  writtenAnswers?: unknown;
   startedAt?: string | null;
 };
 
@@ -131,11 +132,26 @@ export function normalizeAnswers(input: unknown): StudentAnswers | null {
   return answers;
 }
 
+export function normalizeWrittenAnswers(input: unknown): Record<string, string> | null {
+  if (input === undefined || input === null) return {};
+  if (typeof input !== "object" || Array.isArray(input)) return null;
+  const record = input as Record<string, unknown>;
+  const questionIds = new Set(assessmentQuestions.map((question) => question.id));
+  const writtenAnswers: Record<string, string> = {};
+  for (const [questionId, value] of Object.entries(record)) {
+    if (!questionIds.has(questionId) || typeof value !== "string" || value.length > 1200) return null;
+    const answer = value.trim();
+    if (answer) writtenAnswers[questionId] = answer;
+  }
+  return writtenAnswers;
+}
+
 export function buildCategoryScores(answers: StudentAnswers): Record<string, number> {
   return assessmentQuestions.reduce<Record<string, number>>((scores, item) => {
     const value = answers[item.id];
     if (value === undefined) return scores;
-    scores[item.category] = (scores[item.category] ?? 0) + (value + 1);
+    const category = item.signalCategory ?? item.category;
+    scores[category] = (scores[category] ?? 0) + (value + 1);
     return scores;
   }, {});
 }
@@ -383,6 +399,8 @@ export async function readNextAttemptNumber(
 export async function createAssessmentAttempt(client: SupabaseClient, input: CreateAttemptInput): Promise<CreateAttemptOutcome> {
   const answers = normalizeAnswers(input.answers);
   if (!answers) return { ok: false, error: "Every question must be answered before an attempt can be saved." };
+  const writtenAnswers = normalizeWrittenAnswers(input.writtenAnswers);
+  if (!writtenAnswers) return { ok: false, error: "One or more written answers are invalid or exceed the 1,200-character limit." };
 
   const profile = await readAttemptProfile(client, input.userId);
   const profileScores = matchCareers(answers, toMatchProfile(profile), careers.length);
@@ -407,7 +425,7 @@ export async function createAssessmentAttempt(client: SupabaseClient, input: Cre
   const explanations = buildExplanations(candidates);
   const algorithmOutputs = { knn, decisionTree, kmeans, apriori };
   const algorithmPredictions = buildAlgorithmPredictions(algorithmOutputs, algorithmCandidates, aprioriAnalysis);
-  const resultData = { answers, categoryScores, recommendations, knn, algorithmOutputs, algorithmPredictions, careerCandidates: candidates, matchRanking: ranking, explanations };
+  const resultData = { answers, writtenAnswers, categoryScores, recommendations, knn, algorithmOutputs, algorithmPredictions, careerCandidates: candidates, matchRanking: ranking, explanations };
 
   // The legacy row is still written so the existing training loaders, dashboard and
   // any already-deployed reads keep seeing new submissions. It is never updated.

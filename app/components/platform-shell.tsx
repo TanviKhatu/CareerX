@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, BookOpen, BrainCircuit, BriefcaseBusiness, ChevronRight, CircleUserRound, FileText, Gauge, Home, LogOut, Menu, MessageCircle, Mic2, Network, Route, Settings, Sparkles, X } from "lucide-react";
+import { BookOpen, BrainCircuit, BriefcaseBusiness, ChevronRight, CircleUserRound, FileText, Gauge, Home, LogOut, Menu, MessageCircle, Mic2, Network, Route, Settings, Sparkles, X } from "lucide-react";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 const navGroups = [
-  { label: "Workspace", items: [{ href: "/dashboard", label: "Overview", icon: Home }, { href: "/assessment", label: "Assessment", icon: Gauge }, { href: "/careers", label: "Explore careers", icon: BriefcaseBusiness }, { href: "/compare", label: "Compare", icon: BarChart3 }] },
+  { label: "Workspace", items: [{ href: "/dashboard", label: "Overview", icon: Home }, { href: "/assessment", label: "Assessment", icon: Gauge }, { href: "/careers", label: "Explore careers", icon: BriefcaseBusiness }] },
   { label: "Your growth", items: [{ href: "/skills", label: "Skills", icon: Sparkles }, { href: "/learning", label: "Learning plan", icon: BookOpen }, { href: "/roadmap", label: "Roadmap", icon: Route }, { href: "/simulator", label: "Career simulator", icon: Network }] },
   { label: "Practice", items: [{ href: "/counselor", label: "AI counselor", icon: MessageCircle }, { href: "/mock-interview", label: "Mock interview", icon: Mic2 }, { href: "/resume", label: "Resume studio", icon: FileText }] },
 ];

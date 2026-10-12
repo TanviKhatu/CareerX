@@ -238,7 +238,7 @@ export async function loadClusteringRecords(client: SupabaseClient): Promise<Kme
   const { data: results, error: resultError } = await client
     .from("assessment_results")
     .select("user_id,result_data,completed_at")
-    .eq("assessment_type", "career-guidance-v1")
+    .eq("assessment_type", "career-guidance-v2")
     .order("completed_at", { ascending: false });
 
   if (resultError || results === null) return [];
